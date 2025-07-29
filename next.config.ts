@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+
   // Image optimization
   images: {
     formats: ["image/webp", "image/avif"],
@@ -18,12 +19,6 @@ const nextConfig: NextConfig = {
   // Compression and optimization
   compress: true,
   poweredByHeader: false,
-
-  // Experimental features for better performance
-  experimental: {
-    optimizeCss: true,
-    optimizePackageImports: ["lucide-react"],
-  },
 
   // Webpack optimizations
   webpack: (config, { dev, isServer }) => {
