@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   verifyEmail,
@@ -11,7 +11,7 @@ import { Spinner } from "@/components/ui/Spinner";
 import { CheckCircle, XCircle } from "lucide-react";
 import Link from "next/link";
 
-export default function VerifyEmail() {
+function VerifyEmailContent() {
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading"
   );
@@ -193,5 +193,54 @@ export default function VerifyEmail() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Loading fallback component
+function VerifyEmailLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-40 left-40 w-80 h-80 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+      </div>
+
+      {/* Main card */}
+      <div className="relative w-full max-w-md">
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8">
+          {/* Logo and header */}
+          <div className="text-center mb-8">
+            <div className="flex justify-center mb-6">
+              <img
+                src="/logo1.png"
+                alt="SKYBOX"
+                className="w-20 h-20 object-contain"
+              />
+            </div>
+            <div>
+              <div className="flex justify-center mb-4">
+                <Spinner size={48} className="text-blue-600" />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Loading...
+              </h1>
+              <p className="text-gray-600">
+                Please wait while we load the verification page...
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function VerifyEmail() {
+  return (
+    <Suspense fallback={<VerifyEmailLoading />}>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }

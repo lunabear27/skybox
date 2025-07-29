@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -37,7 +37,7 @@ const signUpSchema = z.object({
   }),
 });
 
-const AuthForm = ({ type }: { type: FormType }) => {
+const AuthFormContent = ({ type }: { type: FormType }) => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -493,6 +493,42 @@ const SignUpForm = ({
         </div>
       </div>
     </div>
+  );
+};
+
+// Loading fallback component
+function AuthFormLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8">
+          <div className="text-center">
+            <div className="flex justify-center mb-6">
+              <Image
+                src="/logo1.png"
+                alt="SKYBOX"
+                width={80}
+                height={80}
+                className="object-contain"
+                priority
+              />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              Loading...
+            </h1>
+            <p className="text-gray-600">Please wait...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const AuthForm = ({ type }: { type: FormType }) => {
+  return (
+    <Suspense fallback={<AuthFormLoading />}>
+      <AuthFormContent type={type} />
+    </Suspense>
   );
 };
 
