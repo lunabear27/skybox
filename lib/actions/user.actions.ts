@@ -594,9 +594,23 @@ export const sendPasswordResetEmail = async (email: string) => {
       const userAccount = new Account(userClient);
 
       // Send password recovery email
+      const resetUrl = `${getBaseUrl()}/reset-password`;
+      console.log('🔍 Password reset URL being sent:', resetUrl);
+      console.log('🔍 getBaseUrl() result:', getBaseUrl());
+      console.log('🔍 NODE_ENV:', process.env.NODE_ENV);
+      console.log('🔍 NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL);
+      console.log('🔍 VERCEL_URL:', process.env.VERCEL_URL);
+      
+      // Force the correct URL for production
+      const finalResetUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://skybox-pi.vercel.app/reset-password'
+        : resetUrl;
+      
+      console.log('🔍 Final reset URL:', finalResetUrl);
+      
       await userAccount.createRecovery(
         email,
-        `${getBaseUrl()}/reset-password`
+        finalResetUrl
       );
 
       // Clean up session
