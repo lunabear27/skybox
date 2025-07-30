@@ -104,8 +104,18 @@ export const createAccount = async ({
       const userAccount = new Account(userClient);
 
       // Send verification email using user's session
+      const verificationUrl = `${getBaseUrl()}/verify-email`;
+      console.log('🔍 Email verification URL being sent:', verificationUrl);
+      
+      // Force the correct URL for production
+      const finalVerificationUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://skybox-pi.vercel.app/verify-email'
+        : verificationUrl;
+      
+      console.log('🔍 Final verification URL:', finalVerificationUrl);
+      
       const verification = await userAccount.createVerification(
-        `${getBaseUrl()}/verify-email`
+        finalVerificationUrl
       );
       console.log("Verification email sent successfully:", verification);
 
@@ -493,8 +503,18 @@ export const resendVerificationEmail = async (email: string) => {
       }
 
       // Send verification email using user's session
+      const verificationUrl = `${getBaseUrl()}/verify-email`;
+      console.log('🔍 Resend verification URL being sent:', verificationUrl);
+      
+      // Force the correct URL for production
+      const finalVerificationUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://skybox-pi.vercel.app/verify-email'
+        : verificationUrl;
+      
+      console.log('🔍 Final resend verification URL:', finalVerificationUrl);
+      
       await userAccount.createVerification(
-        `${getBaseUrl()}/verify-email`
+        finalVerificationUrl
       );
 
       // Delete the temporary session using user client
