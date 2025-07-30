@@ -4,6 +4,7 @@ import { ID, Query } from "node-appwrite";
 import { createAdminClient } from "../appwrite";
 import { appwriteConfig } from "../appwrite/config";
 import { parseStringify } from "../utils";
+import { getBaseUrl } from "../utils";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -81,7 +82,7 @@ export const createAccount = async ({
     console.log("Sending verification email...");
     console.log(
       "Verification URL:",
-      `${process.env.NEXT_PUBLIC_APP_URL}/verify-email`
+      `${getBaseUrl()}/verify-email`
     );
 
     // Send verification email using user session (not admin client)
@@ -104,7 +105,7 @@ export const createAccount = async ({
 
       // Send verification email using user's session
       const verification = await userAccount.createVerification(
-        `${process.env.NEXT_PUBLIC_APP_URL}/verify-email`
+        `${getBaseUrl()}/verify-email`
       );
       console.log("Verification email sent successfully:", verification);
 
@@ -493,7 +494,7 @@ export const resendVerificationEmail = async (email: string) => {
 
       // Send verification email using user's session
       await userAccount.createVerification(
-        `${process.env.NEXT_PUBLIC_APP_URL}/verify-email`
+        `${getBaseUrl()}/verify-email`
       );
 
       // Delete the temporary session using user client
@@ -595,7 +596,7 @@ export const sendPasswordResetEmail = async (email: string) => {
       // Send password recovery email
       await userAccount.createRecovery(
         email,
-        `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`
+        `${getBaseUrl()}/reset-password`
       );
 
       // Clean up session
