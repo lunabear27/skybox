@@ -73,27 +73,52 @@ export async function POST(request: NextRequest) {
         user.$id
       );
       console.log("✅ User document retrieved");
-    } catch (docError) {
-      console.error("❌ User document not found:", docError);
-      console.log("🔍 Creating new user document...");
-      
-      // Create the user document if it doesn't exist
-      userDoc = await databases.createDocument(
-        appwriteConfig.databaseId,
-        appwriteConfig.usersCollectionId,
-        user.$id,
-        {
-          email: user.email,
-          name: user.name,
-          $createdAt: user.$createdAt,
-          emailVerification: user.emailVerification,
-          stripeCustomerId: null,
+         } catch (docError) {
+       console.error("❌ User document not found:", docError);
+       console.log("🔍 Creating new user document...");
+       
+       try {
+         // Create the user document if it doesn't exist
+         userDoc = await databases.createDocument(
+           appwriteConfig.databaseId,
+           appwriteConfig.usersCollectionId,
+           user.$id,
+           {
+             email: user.email,
+             name: user.name,
+             $createdAt: user.$createdAt,
+             emailVerification: user.emailVerification,
+             stripeCustomerId: null,
+           }
+         );
+         console.log("✅ New user document created");
+       } catch (createError) {
+         console.error("❌ Failed to create user document:", createError);
+         
+         // If creation fails, try to get the document again (maybe it was created by another process)
+         try {
+           userDoc = await databases.getDocument(
+             appwriteConfig.databaseId,
+             appwriteConfig.usersCollectionId,
+             user.$id
+           );
+           console.log("✅ User document retrieved after creation failure");
+                   } catch (retryError) {
+            console.error("❌ Failed to retrieve user document after creation failure:", retryError);
+            console.log("🔍 Proceeding without user document - will create Stripe customer directly");
+            
+            // Create a minimal user document structure to proceed
+            userDoc = {
+              stripeCustomerId: null,
+              email: user.email,
+              name: user.name,
+              $id: user.$id
+            };
+          }
         }
-      );
-      console.log("✅ New user document created");
-    }
-
-    let customerId = userDoc.stripeCustomerId;
+      }
+  
+      let customerId = userDoc.stripeCustomerId;
 
     if (!customerId) {
       // Create new Stripe customer
@@ -105,17 +130,23 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      customerId = customer.id;
-
-      // Update user document with Stripe customer ID
-      await databases.updateDocument(
-        appwriteConfig.databaseId,
-        appwriteConfig.usersCollectionId,
-        user.$id,
-        {
-          stripeCustomerId: customerId,
-        }
-      );
+             customerId = customer.id;
+ 
+       // Try to update user document with Stripe customer ID (if it exists)
+       try {
+         await databases.updateDocument(
+           appwriteConfig.databaseId,
+           appwriteConfig.usersCollectionId,
+           user.$id,
+           {
+             stripeCustomerId: customerId,
+           }
+         );
+         console.log("✅ User document updated with Stripe customer ID");
+       } catch (updateError) {
+         console.warn("⚠️ Could not update user document with Stripe customer ID:", updateError);
+         console.log("ℹ️ Stripe customer created successfully, but user document update failed");
+       }
     }
 
     // Create checkout session
