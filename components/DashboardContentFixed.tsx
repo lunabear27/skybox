@@ -4430,9 +4430,9 @@ export default function DashboardContentFixed({
               <div className="space-y-2">
                 <Button
                   className="w-full bg-[#3DA9FC] hover:bg-[#0077C2] text-white"
-                  onClick={() => handleContactSales()}
+                  onClick={() => handlePlanSelection("enterprise")}
                 >
-                  Contact Sales
+                  Choose Enterprise
                 </Button>
                 <Button
                   variant="outline"

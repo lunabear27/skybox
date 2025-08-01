@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "setup-stripe": "node scripts/setup-stripe.js"
+    "setup-stripe": "node scripts/setup-stripe.js",
+    "setup-env": "node scripts/setup-env.js"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

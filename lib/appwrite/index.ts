@@ -58,6 +58,11 @@ export const createSessionClient = async () => {
 }
 
 export const createAdminClient = async ()=>{
+    // Validate configuration before creating client
+    if (!appwriteConfig.endpointUrl || !appwriteConfig.projectId || !appwriteConfig.secretKey) {
+        throw new Error('Missing required Appwrite configuration. Please check your environment variables.');
+    }
+    
     const client = new Client()
     .setEndpoint(appwriteConfig.endpointUrl)
     .setProject(appwriteConfig.projectId)
