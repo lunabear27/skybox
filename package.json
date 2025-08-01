@@ -10,7 +10,8 @@
     "setup-stripe": "node scripts/setup-stripe.js",
     "setup-env": "node scripts/setup-env.js",
     "setup-subscriptions": "node scripts/setup-subscriptions-collection.js",
-    "fix-subscription": "node scripts/fix-subscription.js"
+    "fix-subscription": "node scripts/fix-subscription.js",
+    "update-subscription": "node scripts/manual-update-subscription.js"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
