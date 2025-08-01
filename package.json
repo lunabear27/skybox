@@ -9,7 +9,8 @@
     "lint": "next lint",
     "setup-stripe": "node scripts/setup-stripe.js",
     "setup-env": "node scripts/setup-env.js",
-    "setup-subscriptions": "node scripts/setup-subscriptions-collection.js"
+    "setup-subscriptions": "node scripts/setup-subscriptions-collection.js",
+    "fix-subscription": "node scripts/fix-subscription.js"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
