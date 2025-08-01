@@ -229,9 +229,6 @@ export const upgradePlan = async (planId: string) => {
     const userId = await getCurrentUserId();
     console.log(`👤 User ID: ${userId}`);
 
-    const { databases } = await createAdminClient();
-    console.log(`🔗 Database client created`);
-
     // Check if plan exists
     const plan = getPlanById(planId);
     if (!plan) {
@@ -243,102 +240,16 @@ export const upgradePlan = async (planId: string) => {
     }
     console.log(`✅ Plan found: ${plan.name}`);
 
-    // Get the subscriptions collection ID
-    const collections = await databases.listCollections(
-      appwriteConfig.databaseId
-    );
-    const subscriptionsCollection = collections.collections.find(
-      (col) => col.name === "subscriptions"
-    );
-
-    if (!subscriptionsCollection) {
-      console.error("Subscriptions collection not found");
-      return parseStringify({
-        success: false,
-        error: "Subscriptions collection not found",
-      });
-    }
-
-    // Check if user already has any subscription (active or trialing)
-    console.log(`🔍 Checking for existing subscriptions...`);
-    const existingSubscription = await databases.listDocuments(
-      appwriteConfig.databaseId,
-      subscriptionsCollection.$id,
-      [Query.equal("userId", userId)]
-    );
-    console.log(
-      `📊 Found ${existingSubscription.documents.length} existing subscriptions`
-    );
-
-    if (existingSubscription.documents.length > 0) {
-      // Update existing subscription
-      const currentSubscription = existingSubscription
-        .documents[0] as UserSubscription;
-      console.log(
-        `📝 Updating existing subscription: ${currentSubscription.$id}`
-      );
-
-      console.log(`📝 Attempting to update document...`);
-      const updatedSubscription = await databases.updateDocument(
-        appwriteConfig.databaseId,
-        subscriptionsCollection.$id,
-        currentSubscription.$id,
-        {
-          planId,
-          status: "active",
-          currentPeriodStart: new Date().toISOString(),
-          currentPeriodEnd: new Date(
-            Date.now() + 30 * 24 * 60 * 60 * 1000
-          ).toISOString(), // 30 days
-          cancelAtPeriodEnd: false,
-          updatedAt: new Date().toISOString(),
-        }
-      );
-
-      console.log(
-        `✅ Successfully upgraded user ${userId} from ${currentSubscription.planId} to ${planId}`
-      );
-
-      return parseStringify({
-        success: true,
-        subscription: updatedSubscription,
-        plan,
-        features: getPlanFeatures(planId),
-        message: `Successfully upgraded to ${plan.name} plan`,
-      });
-    } else {
-      // Create new subscription
-      console.log(`📝 Creating new subscription...`);
-      const subscription = await databases.createDocument(
-        appwriteConfig.databaseId,
-        subscriptionsCollection.$id,
-        ID.unique(),
-        {
-          userId,
-          planId,
-          status: "active",
-          currentPeriodStart: new Date().toISOString(),
-          currentPeriodEnd: new Date(
-            Date.now() + 30 * 24 * 60 * 60 * 1000
-          ).toISOString(), // 30 days
-          cancelAtPeriodEnd: false,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }
-      );
-
-      console.log(
-        `✅ Successfully created new subscription for user ${userId} to ${planId} plan`
-      );
-
-      return parseStringify({
-        success: true,
-        subscription,
-        plan,
-        features: getPlanFeatures(planId),
-        message: `Successfully subscribed to ${plan.name} plan`,
-      });
-    }
+    // For Stripe integration, we'll redirect to checkout instead of directly updating
+    // The actual subscription update will happen via webhook
+    return parseStringify({
+      success: true,
+      redirectToCheckout: true,
+      planId,
+      plan,
+      features: getPlanFeatures(planId),
+      message: `Redirecting to payment for ${plan.name} plan`,
+    });
   } catch (error) {
     console.error("Upgrade plan error:", error);
     console.error("Error details:", {
