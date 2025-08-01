@@ -1062,6 +1062,13 @@ export default function DashboardContentFixed({
     setSelectAll(false);
   };
 
+  const getPlanDisplayName = (planId?: any, isTrial?: any) => {
+    if (!planId || planId === "free") return "Free Plan";
+    
+    const planName = String(planId).charAt(0).toUpperCase() + String(planId).slice(1);
+    return Boolean(isTrial) ? `${planName} Trial` : `${planName} Plan`;
+  };
+
   // File icon component
   const FileIcon = ({ file }: { file: FileItem }) => {
     if (file.type === "folder") {
@@ -2093,11 +2100,7 @@ export default function DashboardContentFixed({
                     )} / ${formatFileSize(storageUsage.maxStorage)}`}
                   </p>
                   <p className="text-sm text-[#64748b] mt-1">
-                    {storageUsage.totalFiles} files • {userSubscription?.planId === "free"
-                      ? "Free Plan"
-                      : userSubscription?.isTrial
-                      ? `${(userSubscription?.planId as string)?.charAt(0).toUpperCase()}${(userSubscription?.planId as string)?.slice(1)} Trial`
-                      : `${(userSubscription?.planId as string)?.charAt(0).toUpperCase()}${(userSubscription?.planId as string)?.slice(1)} Plan`}
+                    {storageUsage.totalFiles} files • {getPlanDisplayName(userSubscription?.planId, userSubscription?.isTrial)}
                   </p>
                 </div>
               </div>
@@ -3401,11 +3404,7 @@ export default function DashboardContentFixed({
                     Current Plan
                   </p>
                   <p className="text-lg font-bold text-[#1C1C1C]">
-                    {userSubscription?.planId === "free"
-                      ? "Free Plan"
-                      : userSubscription?.isTrial
-                      ? `${(userSubscription?.planId as string)?.charAt(0).toUpperCase()}${(userSubscription?.planId as string)?.slice(1)} Trial`
-                      : `${(userSubscription?.planId as string)?.charAt(0).toUpperCase()}${(userSubscription?.planId as string)?.slice(1)} Plan`}
+                    {getPlanDisplayName(userSubscription?.planId, userSubscription?.isTrial)}
                   </p>
                   <p className="text-sm text-[#64748b]">
                     {userSubscription?.planId === "free"
@@ -3698,6 +3697,8 @@ export default function DashboardContentFixed({
       };
       return stats;
     };
+
+
 
     const stats = getFileTypeStats();
 
