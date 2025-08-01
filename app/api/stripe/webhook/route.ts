@@ -118,7 +118,7 @@ async function handleSubscriptionCreated(subscription: any, databases: any) {
     );
 
     if (!subscriptionsCollection) {
-      console.error("Subscriptions collection not found");
+      console.error("Subscriptions collection not found - please run: npm run setup-subscriptions");
       return;
     }
 
