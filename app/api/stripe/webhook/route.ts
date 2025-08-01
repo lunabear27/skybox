@@ -10,6 +10,8 @@ import { headers } from "next/headers";
 
 export async function POST(request: NextRequest) {
   try {
+    console.log("🔔 Webhook received");
+    
     // Validate Stripe configuration
     validateStripeConfig();
 
@@ -17,6 +19,7 @@ export async function POST(request: NextRequest) {
     const signature = (await headers()).get("stripe-signature");
 
     if (!signature) {
+      console.error("❌ Missing stripe-signature header");
       return NextResponse.json(
         { error: "Missing stripe-signature header" },
         { status: 400 }
@@ -30,53 +33,62 @@ export async function POST(request: NextRequest) {
         signature,
         process.env.STRIPE_WEBHOOK_SECRET!
       );
+      console.log(`✅ Webhook signature verified - Event type: ${event.type}`);
     } catch (err) {
-      console.error("Webhook signature verification failed:", err);
+      console.error("❌ Webhook signature verification failed:", err);
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 
     const { databases } = await createAdminClient();
 
     // Handle different event types
+    console.log(`🔄 Processing event: ${event.type}`);
+    
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as any;
+        console.log(`💳 Checkout completed for session: ${session.id}`);
         await handleCheckoutSessionCompleted(session, databases);
         break;
       }
 
       case "customer.subscription.created": {
         const subscription = event.data.object as any;
+        console.log(`📅 Subscription created: ${subscription.id}`);
         await handleSubscriptionCreated(subscription, databases);
         break;
       }
 
       case "customer.subscription.updated": {
         const subscription = event.data.object as any;
+        console.log(`📅 Subscription updated: ${subscription.id}`);
         await handleSubscriptionUpdated(subscription, databases);
         break;
       }
 
       case "customer.subscription.deleted": {
         const subscription = event.data.object as any;
+        console.log(`📅 Subscription deleted: ${subscription.id}`);
         await handleSubscriptionDeleted(subscription, databases);
         break;
       }
 
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as any;
+        console.log(`💰 Payment succeeded for invoice: ${invoice.id}`);
         await handleInvoicePaymentSucceeded(invoice, databases);
         break;
       }
 
       case "invoice.payment_failed": {
         const invoice = event.data.object as any;
+        console.log(`❌ Payment failed for invoice: ${invoice.id}`);
         await handleInvoicePaymentFailed(invoice, databases);
         break;
       }
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        console.log(`⚠️ Unhandled event type: ${event.type}`);
     }
 
     return NextResponse.json({ received: true });
