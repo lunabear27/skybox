@@ -34,6 +34,7 @@ import DashboardContentFixed from "./DashboardContentFixed";
 import { getStorageUsage } from "@/lib/actions/file.actions";
 import { getUserSubscription } from "@/lib/actions/subscription.actions";
 import { Spinner } from "@/components/ui/Spinner";
+import { logger } from "@/lib/utils/logger";
 
 interface User {
   $id: string;
@@ -247,11 +248,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   const refreshStorageUsage = async () => {
     try {
-      console.log("🔄 Fetching storage usage...");
+      logger.loading("Fetching storage usage...");
       const result = await getStorageUsage();
-      console.log("📊 Storage result:", result);
+      logger.storage("Storage result:", result);
       if (result.success) {
-        console.log("✅ Setting storage usage:", {
+        logger.success("Setting storage usage:", {
           used: result.usage.totalSize,
           total: result.usage.maxStorage,
         });

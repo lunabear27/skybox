@@ -72,6 +72,7 @@ import * as Popover from "@radix-ui/react-popover";
 import { Spinner } from "@/components/ui/Spinner";
 import { uploadProgressTracker } from "@/lib/utils/uploadProgress";
 import { useStripe } from "@/lib/hooks/useStripe";
+import { logger } from "@/lib/utils/logger";
 
 interface User {
   $id: string;
@@ -293,18 +294,18 @@ export default function DashboardContentFixed({
       }
 
       if (result.success) {
-        console.log(
-          `📁 Loaded ${result.files.length} files for section: ${activeSection}`
+        logger.file(
+          `Loaded ${result.files.length} files for section: ${activeSection}`
         );
-        console.log(`📊 Total files in database: ${result.total}`);
-        console.log(
-          `📁 First 5 files:`,
+        logger.storage(`Total files in database: ${result.total}`);
+        logger.file(
+          `First 5 files:`,
           result.files
             .slice(0, 5)
             .map((f: FileItem) => ({ id: f.$id, name: f.name }))
         );
-        console.log(
-          `📁 Last 5 files:`,
+        logger.file(
+          `Last 5 files:`,
           result.files
             .slice(-5)
             .map((f: FileItem) => ({ id: f.$id, name: f.name }))
@@ -325,7 +326,7 @@ export default function DashboardContentFixed({
       const result = await getUserSubscription();
       if (result.success) {
         setUserSubscription(result.subscription);
-        console.log("📊 Loaded subscription data:", result);
+        logger.storage("Loaded subscription data:", result);
       }
     } catch (error) {
       console.error("Error loading subscription:", error);
@@ -1064,8 +1065,9 @@ export default function DashboardContentFixed({
 
   const getPlanDisplayName = (planId?: any, isTrial?: any) => {
     if (!planId || planId === "free") return "Free Plan";
-    
-    const planName = String(planId).charAt(0).toUpperCase() + String(planId).slice(1);
+
+    const planName =
+      String(planId).charAt(0).toUpperCase() + String(planId).slice(1);
     return Boolean(isTrial) ? `${planName} Trial` : `${planName} Plan`;
   };
 
@@ -2100,7 +2102,11 @@ export default function DashboardContentFixed({
                     )} / ${formatFileSize(storageUsage.maxStorage)}`}
                   </p>
                   <p className="text-sm text-[#64748b] mt-1">
-                    {storageUsage.totalFiles} files • {getPlanDisplayName(userSubscription?.planId, userSubscription?.isTrial)}
+                    {storageUsage.totalFiles} files •{" "}
+                    {getPlanDisplayName(
+                      userSubscription?.planId,
+                      userSubscription?.isTrial
+                    )}
                   </p>
                 </div>
               </div>
@@ -3404,7 +3410,10 @@ export default function DashboardContentFixed({
                     Current Plan
                   </p>
                   <p className="text-lg font-bold text-[#1C1C1C]">
-                    {getPlanDisplayName(userSubscription?.planId, userSubscription?.isTrial)}
+                    {getPlanDisplayName(
+                      userSubscription?.planId,
+                      userSubscription?.isTrial
+                    )}
                   </p>
                   <p className="text-sm text-[#64748b]">
                     {userSubscription?.planId === "free"
@@ -3697,8 +3706,6 @@ export default function DashboardContentFixed({
       };
       return stats;
     };
-
-
 
     const stats = getFileTypeStats();
 
@@ -4138,7 +4145,7 @@ export default function DashboardContentFixed({
           // Check if we need to redirect to Stripe checkout
           if (result.redirectToCheckout) {
             console.log(`🔄 Redirecting to Stripe checkout for ${planId} plan`);
-            
+
             // Use the Stripe hook to create checkout session
             await createCheckoutSession(planId, "monthly");
           } else {

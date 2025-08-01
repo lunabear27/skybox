@@ -11,7 +11,10 @@
     "setup-env": "node scripts/setup-env.js",
     "setup-subscriptions": "node scripts/setup-subscriptions-collection.js",
     "fix-subscription": "node scripts/fix-subscription.js",
-    "update-subscription": "node scripts/manual-update-subscription.js"
+    "update-subscription": "node scripts/manual-update-subscription.js",
+    "find-user-id": "node scripts/find-user-id.js",
+    "quick-fix": "node scripts/quick-fix-subscription.js",
+    "cleanup-logs": "node scripts/cleanup-logs.js"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
