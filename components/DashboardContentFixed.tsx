@@ -71,6 +71,7 @@ import { useDropzone } from "react-dropzone";
 import * as Popover from "@radix-ui/react-popover";
 import { Spinner } from "@/components/ui/Spinner";
 import { uploadProgressTracker } from "@/lib/utils/uploadProgress";
+import { useStripe } from "@/lib/hooks/useStripe";
 
 interface User {
   $id: string;
@@ -118,6 +119,8 @@ export default function DashboardContentFixed({
   refreshStorageUsage,
   storageUsage: parentStorageUsage,
 }: DashboardContentProps) {
+  // Initialize Stripe hook
+  const { createCheckoutSession } = useStripe();
   const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQueryState, setSearchQueryState] = useState("");
@@ -4117,13 +4120,21 @@ export default function DashboardContentFixed({
 
         const result = await upgradePlan(planId);
         if (result.success) {
-          setSubscriptionMessage(result.message);
-          setUserSubscription(result.subscription);
-          console.log(`✅ Successfully upgraded to ${planId} plan`);
+          // Check if we need to redirect to Stripe checkout
+          if (result.redirectToCheckout) {
+            console.log(`🔄 Redirecting to Stripe checkout for ${planId} plan`);
+            
+            // Use the Stripe hook to create checkout session
+            await createCheckoutSession(planId, "monthly");
+          } else {
+            setSubscriptionMessage(result.message);
+            setUserSubscription(result.subscription);
+            console.log(`✅ Successfully upgraded to ${planId} plan`);
 
-          // Refresh storage usage to reflect new limits
-          loadStorageUsage();
-          refreshStorageUsage?.();
+            // Refresh storage usage to reflect new limits
+            loadStorageUsage();
+            refreshStorageUsage?.();
+          }
         } else {
           setSubscriptionMessage(`Error: ${result.error}`);
           console.error("Upgrade failed:", result.error);
