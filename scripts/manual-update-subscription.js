@@ -1,5 +1,5 @@
 const readline = require('readline');
-const { Client, Databases } = require('node-appwrite');
+const { Client, Databases, Query } = require('node-appwrite');
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -58,7 +58,7 @@ async function manualUpdateSubscription() {
     const existingSubscriptions = await databases.listDocuments(
       databaseId,
       subscriptionsCollection.$id,
-      [{ key: "userId", operator: "equal", value: userId }]
+      [Query.equal("userId", userId)]
     );
 
     const subscriptionData = {
