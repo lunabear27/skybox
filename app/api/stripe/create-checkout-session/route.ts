@@ -7,17 +7,31 @@ import { ID } from "node-appwrite";
 
 export async function POST(request: NextRequest) {
   try {
+    console.log("🔍 Stripe checkout session - Starting...");
+    
     // Validate Stripe configuration
-    validateStripeConfig();
+    try {
+      validateStripeConfig();
+      console.log("✅ Stripe config validation passed");
+    } catch (configError) {
+      console.error("❌ Stripe config validation failed:", configError);
+      return NextResponse.json(
+        { error: "Stripe configuration error", details: configError instanceof Error ? configError.message : "Unknown error" },
+        { status: 500 }
+      );
+    }
 
     // Get current user
+    console.log("🔍 Getting current user...");
     const user = await getCurrentUser();
     if (!user) {
+      console.error("❌ No user found - authentication required");
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
       );
     }
+    console.log("✅ User found:", user.$id);
 
     // Parse request body
     const {
@@ -41,14 +55,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Get or create Stripe customer
+    console.log("🔍 Creating admin client...");
     const { databases } = await createAdminClient();
+    console.log("✅ Admin client created");
 
     // Check if user already has a Stripe customer ID
+    console.log("🔍 Getting user document from database...");
     const userDoc = await databases.getDocument(
       appwriteConfig.databaseId,
       appwriteConfig.usersCollectionId,
       user.$id
     );
+    console.log("✅ User document retrieved");
 
     let customerId = userDoc.stripeCustomerId;
 
