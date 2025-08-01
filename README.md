@@ -2,6 +2,17 @@
 
 A modern cloud storage application built with Next.js, Appwrite, and Stripe payment integration. Features file management, subscription plans, and secure payment processing.
 
+## 🌐 Demo Site
+
+**Live Demo**: [https://skybox-pi.vercel.app](https://skybox-pi.vercel.app)
+
+Experience SkyBox in action with full functionality including:
+- 📁 File upload and management
+- 💳 Stripe payment integration
+- 🔐 User authentication
+- 📊 Storage analytics
+- 🎯 14-day trial system
+
 ## ✨ Features
 
 - **📁 File Management**: Upload, organize, and manage your files
