@@ -4234,14 +4234,14 @@ export default function DashboardContentFixed({
               className={`px-3 py-1 rounded-full text-sm font-medium ${
                 userSubscription?.planId === "free"
                   ? "bg-gray-100 text-gray-600"
-                  : userSubscription?.status === "trialing"
+                  : userSubscription?.isTrial
                   ? "bg-yellow-100 text-yellow-700"
                   : "bg-[#E0F2FE] text-[#0077C2]"
               }`}
             >
               {userSubscription?.planId === "free"
                 ? "Free Plan"
-                : userSubscription?.status === "trialing"
+                : userSubscription?.isTrial
                 ? `${
                     (userSubscription?.planId as string)
                       ?.charAt(0)

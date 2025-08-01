@@ -307,15 +307,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     if (!userSubscription) return "Free User";
 
     const planId = userSubscription.planId;
-    const status = userSubscription.status;
+    const isTrial = userSubscription.isTrial;
 
     switch (planId) {
       case "basic":
-        return status === "trialing" ? "Basic Trial" : "Basic User";
+        return isTrial ? "Basic Trial" : "Basic User";
       case "pro":
-        return status === "trialing" ? "Pro Trial" : "Pro User";
+        return isTrial ? "Pro Trial" : "Pro User";
       case "enterprise":
-        return status === "trialing" ? "Enterprise Trial" : "Enterprise User";
+        return isTrial ? "Enterprise Trial" : "Enterprise User";
       default:
         return "Free User";
     }
@@ -325,9 +325,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     if (!userSubscription) return "text-gray-600 bg-gray-50";
 
     const planId = userSubscription.planId;
-    const status = userSubscription.status;
+    const isTrial = userSubscription.isTrial;
 
-    if (status === "trialing") {
+    if (isTrial) {
       return "text-orange-600 bg-orange-50";
     }
 

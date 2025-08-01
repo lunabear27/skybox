@@ -15,6 +15,7 @@ export interface UserSubscription {
   userId: string;
   planId: string;
   status: "active" | "canceled" | "past_due" | "trialing" | "incomplete";
+  isTrial?: boolean;
   currentPeriodStart: string;
   currentPeriodEnd: string;
   trialStart?: string;

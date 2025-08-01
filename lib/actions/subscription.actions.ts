@@ -79,6 +79,7 @@ export const getUserSubscription = async () => {
           userId,
           planId: "free",
           status: "active",
+          isTrial: false,
           currentPeriodStart: new Date().toISOString(),
           currentPeriodEnd: new Date(
             Date.now() + 365 * 24 * 60 * 60 * 1000
@@ -94,6 +95,36 @@ export const getUserSubscription = async () => {
 
     const subscription = result.documents[0] as UserSubscription;
 
+    // Check if trial has expired
+    if (subscription.isTrial && subscription.trialEnd) {
+      const trialEndDate = new Date(subscription.trialEnd);
+      const now = new Date();
+      
+      if (now > trialEndDate) {
+        // Trial has expired, return free plan
+        const freePlan = getPlanById("free");
+        return parseStringify({
+          success: true,
+          subscription: {
+            id: "free",
+            userId,
+            planId: "free",
+            status: "active",
+            isTrial: false,
+            currentPeriodStart: new Date().toISOString(),
+            currentPeriodEnd: new Date(
+              Date.now() + 365 * 24 * 60 * 60 * 1000
+            ).toISOString(),
+            cancelAtPeriodEnd: false,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+          plan: freePlan,
+          features: getPlanFeatures("free"),
+        });
+      }
+    }
+
     // If subscription is canceled, treat it as free plan
     if (subscription.status === "canceled") {
       const freePlan = getPlanById("free");
@@ -104,10 +135,11 @@ export const getUserSubscription = async () => {
           userId,
           planId: "free",
           status: "active",
+          isTrial: false,
           currentPeriodStart: new Date().toISOString(),
           currentPeriodEnd: new Date(
             Date.now() + 365 * 24 * 60 * 60 * 1000
-          ).toISOString(), // 1 year from now
+          ).toISOString(),
           cancelAtPeriodEnd: false,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -143,15 +175,13 @@ export const startTrial = async (planId: string) => {
     // Check if plan exists
     const plan = getPlanById(planId);
     if (!plan) {
-      console.log(`❌ Invalid plan: ${planId}`);
       return parseStringify({
         success: false,
         error: "Invalid plan",
       });
     }
-    console.log(`✅ Plan found: ${plan.name}`);
 
-    // Get the subscriptions collection ID
+    // Get the subscriptions collection
     const collections = await databases.listCollections(
       appwriteConfig.databaseId
     );
@@ -160,57 +190,81 @@ export const startTrial = async (planId: string) => {
     );
 
     if (!subscriptionsCollection) {
-      console.error("Subscriptions collection not found");
       return parseStringify({
         success: false,
         error: "Subscriptions collection not found",
       });
     }
 
-    // Check if user already has an active subscription
-    const existingSubscription = await databases.listDocuments(
+    // Check if user already has an active subscription or trial
+    const existingSubscriptions = await databases.listDocuments(
       appwriteConfig.databaseId,
       subscriptionsCollection.$id,
-      [Query.equal("userId", userId), Query.equal("status", "active")]
+      [{ key: "userId", operator: "equal", value: userId }]
     );
 
-    if (existingSubscription.documents.length > 0) {
-      return parseStringify({
-        success: false,
-        error: "You already have an active subscription",
-      });
+    if (existingSubscriptions.documents.length > 0) {
+      const existingSub = existingSubscriptions.documents[0];
+      
+      // If user already has an active subscription, don't start trial
+      if (existingSub.status === "active" && !existingSub.isTrial) {
+        return parseStringify({
+          success: false,
+          error: "You already have an active subscription",
+        });
+      }
+      
+      // If user has an active trial, don't start another trial
+      if (existingSub.status === "active" && existingSub.isTrial) {
+        return parseStringify({
+          success: false,
+          error: "You already have an active trial",
+        });
+      }
     }
 
-    // Create trial subscription
+    // Calculate trial period (14 days)
     const trialStart = new Date();
     const trialEnd = new Date(trialStart.getTime() + 14 * 24 * 60 * 60 * 1000); // 14 days
 
-    const subscription = await databases.createDocument(
-      appwriteConfig.databaseId,
-      subscriptionsCollection.$id,
-      ID.unique(),
-      {
-        userId,
-        planId,
-        status: "trialing",
-        currentPeriodStart: trialStart.toISOString(),
-        currentPeriodEnd: trialEnd.toISOString(),
-        trialStart: trialStart.toISOString(),
-        trialEnd: trialEnd.toISOString(),
-        cancelAtPeriodEnd: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-    );
+    const trialData = {
+      userId,
+      planId,
+      status: "active",
+      isTrial: true,
+      trialStart: trialStart.toISOString(),
+      trialEnd: trialEnd.toISOString(),
+      currentPeriodStart: trialStart.toISOString(),
+      currentPeriodEnd: trialEnd.toISOString(),
+      cancelAtPeriodEnd: false,
+      stripeSubscriptionId: null,
+      stripeCustomerId: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
 
-    console.log(`🎉 Started trial for user ${userId} on plan ${planId}`);
+    if (existingSubscriptions.documents.length > 0) {
+      // Update existing subscription to trial
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        subscriptionsCollection.$id,
+        existingSubscriptions.documents[0].$id,
+        trialData
+      );
+    } else {
+      // Create new trial subscription
+      await databases.createDocument(
+        appwriteConfig.databaseId,
+        subscriptionsCollection.$id,
+        "unique()",
+        trialData
+      );
+    }
 
     return parseStringify({
       success: true,
-      subscription,
-      plan,
-      features: getPlanFeatures(planId),
-      message: `14-day trial started for ${plan.name} plan`,
+      message: `14-day trial started for ${plan.name}`,
+      subscription: trialData,
     });
   } catch (error) {
     console.error("Start trial error:", error);

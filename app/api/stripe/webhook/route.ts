@@ -139,6 +139,7 @@ async function handleSubscriptionCreated(subscription: any, databases: any) {
       userId,
       planId,
       status: subscription.status,
+      isTrial: false, // Convert from trial to paid
       currentPeriodStart: new Date(
         subscription.current_period_start * 1000
       ).toISOString(),
