@@ -2093,7 +2093,11 @@ export default function DashboardContentFixed({
                     )} / ${formatFileSize(storageUsage.maxStorage)}`}
                   </p>
                   <p className="text-sm text-[#64748b] mt-1">
-                    {storageUsage.totalFiles} files • Free Plan
+                    {storageUsage.totalFiles} files • {userSubscription?.planId === "free"
+                      ? "Free Plan"
+                      : userSubscription?.isTrial
+                      ? `${(userSubscription?.planId as string)?.charAt(0).toUpperCase()}${(userSubscription?.planId as string)?.slice(1)} Trial`
+                      : `${(userSubscription?.planId as string)?.charAt(0).toUpperCase()}${(userSubscription?.planId as string)?.slice(1)} Plan`}
                   </p>
                 </div>
               </div>
@@ -3396,9 +3400,19 @@ export default function DashboardContentFixed({
                   <p className="text-sm font-medium text-[#64748b] uppercase tracking-wide">
                     Current Plan
                   </p>
-                  <p className="text-lg font-bold text-[#1C1C1C]">Free Plan</p>
+                  <p className="text-lg font-bold text-[#1C1C1C]">
+                    {userSubscription?.planId === "free"
+                      ? "Free Plan"
+                      : userSubscription?.isTrial
+                      ? `${(userSubscription?.planId as string)?.charAt(0).toUpperCase()}${(userSubscription?.planId as string)?.slice(1)} Trial`
+                      : `${(userSubscription?.planId as string)?.charAt(0).toUpperCase()}${(userSubscription?.planId as string)?.slice(1)} Plan`}
+                  </p>
                   <p className="text-sm text-[#64748b]">
-                    Basic storage included
+                    {userSubscription?.planId === "free"
+                      ? "Basic storage included"
+                      : userSubscription?.isTrial
+                      ? "14-day trial period"
+                      : "Full plan features"}
                   </p>
                 </div>
 
