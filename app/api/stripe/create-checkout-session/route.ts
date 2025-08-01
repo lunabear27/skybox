@@ -61,12 +61,37 @@ export async function POST(request: NextRequest) {
 
     // Check if user already has a Stripe customer ID
     console.log("🔍 Getting user document from database...");
-    const userDoc = await databases.getDocument(
-      appwriteConfig.databaseId,
-      appwriteConfig.usersCollectionId,
-      user.$id
-    );
-    console.log("✅ User document retrieved");
+    console.log("🔍 User ID:", user.$id);
+    console.log("🔍 Database ID:", appwriteConfig.databaseId);
+    console.log("🔍 Users Collection ID:", appwriteConfig.usersCollectionId);
+    
+    let userDoc;
+    try {
+      userDoc = await databases.getDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.usersCollectionId,
+        user.$id
+      );
+      console.log("✅ User document retrieved");
+    } catch (docError) {
+      console.error("❌ User document not found:", docError);
+      console.log("🔍 Creating new user document...");
+      
+      // Create the user document if it doesn't exist
+      userDoc = await databases.createDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.usersCollectionId,
+        user.$id,
+        {
+          email: user.email,
+          name: user.name,
+          $createdAt: user.$createdAt,
+          emailVerification: user.emailVerification,
+          stripeCustomerId: null,
+        }
+      );
+      console.log("✅ New user document created");
+    }
 
     let customerId = userDoc.stripeCustomerId;
 
