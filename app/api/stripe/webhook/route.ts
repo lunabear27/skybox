@@ -102,26 +102,41 @@ export async function POST(request: NextRequest) {
 }
 
 async function handleCheckoutSessionCompleted(session: any, databases: any) {
+  console.log("🔍 Processing checkout session completed event...");
+  console.log("📋 Session ID:", session.id);
+  console.log("📋 Session metadata:", session.metadata);
+  
   const { userId, planId, billingCycle } = session.metadata;
 
   if (!userId || !planId) {
-    console.error("Missing metadata in checkout session:", session.id);
+    console.error("❌ Missing metadata in checkout session:", session.id);
+    console.error("📋 Available metadata:", session.metadata);
     return;
   }
 
-  console.log(`Checkout completed for user ${userId}, plan ${planId}`);
+  console.log("✅ Checkout completed for user", userId, "plan", planId);
+  console.log("📋 Session status:", session.payment_status);
+  console.log("📋 Session mode:", session.mode);
 }
 
 async function handleSubscriptionCreated(subscription: any, databases: any) {
+  console.log("🔍 Processing subscription created event...");
+  console.log("📋 Subscription ID:", subscription.id);
+  console.log("📋 Subscription metadata:", subscription.metadata);
+  
   const { userId, planId, billingCycle } = subscription.metadata;
 
   if (!userId || !planId) {
-    console.error("Missing metadata in subscription:", subscription.id);
+    console.error("❌ Missing metadata in subscription:", subscription.id);
+    console.error("📋 Available metadata:", subscription.metadata);
     return;
   }
 
+  console.log("✅ Metadata found - User ID:", userId, "Plan ID:", planId);
+
   try {
     // Get the subscriptions collection
+    console.log("🔍 Getting subscriptions collection...");
     const collections = await databases.listCollections(
       appwriteConfig.databaseId
     );
@@ -130,9 +145,11 @@ async function handleSubscriptionCreated(subscription: any, databases: any) {
     );
 
     if (!subscriptionsCollection) {
-      console.error("Subscriptions collection not found - please run: npm run setup-subscriptions");
+      console.error("❌ Subscriptions collection not found - please run: npm run setup-subscriptions");
       return;
     }
+
+    console.log("✅ Found subscriptions collection:", subscriptionsCollection.$id);
 
     // Create or update subscription in database
     const subscriptionData = {
@@ -152,34 +169,47 @@ async function handleSubscriptionCreated(subscription: any, databases: any) {
       updatedAt: new Date().toISOString(),
     };
 
+    console.log("📋 Subscription data to save:", subscriptionData);
+
     // Check if subscription already exists
+    console.log("🔍 Checking for existing subscription...");
     const existingSubscriptions = await databases.listDocuments(
       appwriteConfig.databaseId,
       subscriptionsCollection.$id,
       [{ key: "userId", operator: "equal", value: userId }]
     );
 
+    console.log("📋 Found existing subscriptions:", existingSubscriptions.documents.length);
+
     if (existingSubscriptions.documents.length > 0) {
       // Update existing subscription
+      console.log("📝 Updating existing subscription...");
       await databases.updateDocument(
         appwriteConfig.databaseId,
         subscriptionsCollection.$id,
         existingSubscriptions.documents[0].$id,
         subscriptionData
       );
+      console.log("✅ Existing subscription updated successfully");
     } else {
       // Create new subscription
+      console.log("📝 Creating new subscription...");
       await databases.createDocument(
         appwriteConfig.databaseId,
         subscriptionsCollection.$id,
         "unique()",
         subscriptionData
       );
+      console.log("✅ New subscription created successfully");
     }
 
-    console.log(`Subscription created for user ${userId}, plan ${planId}`);
+    console.log(`🎉 Subscription processed successfully for user ${userId}, plan ${planId}`);
   } catch (error) {
-    console.error("Error handling subscription created:", error);
+    console.error("❌ Error handling subscription created:", error);
+    console.error("📋 Error details:", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined
+    });
   }
 }
 
